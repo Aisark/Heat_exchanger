@@ -38,19 +38,18 @@
 //Constantes para el control del relevador de las resistencia 
 int resistenceRel=21;
 //Sensores de temperatura en el deposito de agua caliente y en las entradas y salidad de agua caliente y fria
-float temp_sensor_0;
-float temp_sensor_1,temp_sensor_2,temp_sensor_3,temp_sensor_4,temp_sensor_5,temp_sensor_6;
-float temp_sensor_7,temp_sensor_8,temp_sensor_9,temp_sensor_10,temp_sensor_11,temp_sensor_12;
+/* Se cambio las variables indiviaduales a un arreglo de tipo float de 13 elementos */
+float temp_sensor [13];
 //Variables de comprobacion del sensor de temperatura
-float temp_state_0;
-float temp_state_1,temp_state_2,temp_state_3,temp_state_4,temp_state_5,temp_state_6;
-float temp_state_7,temp_state_8,temp_state_9,temp_state_10,temp_state_11,temp_state_12;
+/* Se cambio las variables indiviaduales a un arreglo de tipo float de 13 elementos */
+float temp_state [13];
 //Variable para el valor introducido de la temperatura
 int temp;
 //Flag de variable de temperatura
 int temp_flag;
 //Variables para comprobar si se ha elegido una opcion valida de configuracion de menu
-int state,state1,state2,state3,state4,state5;
+/* Se cambio las variables indiviaduales a un arreglo de tipo int de 6 elementos */
+int state [6];
 //Variable para comprobar si el usuario deja de introducir informacion del keypad
 int data_in;
 //Termopar del baño de agua caliente
@@ -77,26 +76,28 @@ int hex_id;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Constantes para el control del banco de intercambiadores de calor
 //Constantes para el control de valvulas de intercambiador de tubo doble
-  //Valvulas de entrada y salida
-    Servo hex1_valv_inh;                             //int hex1_valv_in=9;
-    Servo hex1_valv_outh;                            //int hex1_valv_out=10; 
-    Servo hex1_valv_inc;
-    Servo hex1_valv_outc;  
-  //Valvulas de control de flujo en el intercambiador de tubo doble
-    Servo hex1_valv1;                               //int hex1_valv1=11;    //Numeros impares para valvulas de flujo paralelo
-    Servo hex1_valv2;                               //int hex1_valv2=12;    //Numeros pares para valvulas de contraflujo
-    Servo hex1_valv3;                               //int hex1_valv3=13;
-    Servo hex1_valv4;                               //int hex1_valv4=14;
+  //Valvulas de entrada y salida => [0,1,2,3]
+  /*
+   * [0,1] => [inh,outh] {int hex1_valv_in=9,int hex1_valv_out=10 }
+   * [2,3] => [inc,outc]
+   */
+  //Valvulas de control de flujo en el intercambiador de tubo doble => [4,5,6,7]
+  //Numeros impares para valvulas de flujo paralelo => [11,13]
+  //Numeros pares para valvulas de contraflujo => [12,14]
+  Servo hex1_valv [8];
 //Constantes para el control de valvulas de intercambiador de banco de tubos
-  //Valvulas de entrada y salida
-    Servo hex2_valv_inh;                             //int hex2_valv_in=15;
-    Servo hex2_valv_outh;                            //int hex2_valv_out=16;
-    Servo hex2_valv_inc;
-    Servo hex2_valv_outc;
+  //Valvulas de entrada y salida => [0,1,2,3]
+  /*
+   * [0,1] => [inh,outh] {int hex2_valv_in=15 ,int hex2_valv_out=16 }
+   * [2,3] => [inc,outc]
+   */
+  Servo hex2_valv [4];
 //Constantes para el control de valvulas de intercambiador de aletas
-  //Valvulas de entrada y salida
-    Servo hex3_valv_in;                             //int hex3_valv_in=17;
-    Servo hex3_valv_out;                            //int hex3_valv_out=18;
+  //Valvulas de entrada y salida => [0,1]
+  /*
+   * [0,1] => [inh,outh] {int hex3_valv_in=17 ,int hex3_valv_out=18 }
+   */
+    Servo hex3_valv [2];
 //Constantes para el control de motor de bomba liquido caliente
     int bomb_h=19;
 //Constantes para el control de motor de bomba liquido frio
@@ -104,6 +105,7 @@ int hex_id;
 //Variables para el control de cierre y apertura de valvulas
     boolean closed;
     int x=0;
+    int anInt [] = {A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Conexiones de Keypad
@@ -120,25 +122,6 @@ int hex_id;
     byte rowPins[rows] = {5, 4, 3, 2}; //connect to the row pinouts of the keypad
     byte colPins[cols] = {8, 7, 6}; //connect to the column pinouts of the keypad
     Keypad teclado = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
-
-//Para una futura conexion a 4 pines 
-
-
-//    const byte ROWS = 4; //four rows
-//    const byte COLS = 4; //four columns
-//    char keys[ROWS][COLS] = {
-//      {'1','2','3','A'},
-//      {'4','5','6','B'},
-//      {'7','8','9','C'},
-//      {'*','0','#','D'}
-//    };
-
-//    byte rowPins[ROWS] = {5, 4, 3, 2}; //connect to the row pinouts of the keypad
-//    byte colPins[COLS] = {9, 8, 7, 6}; //connect to the column pinouts of the keypad
-
-//    Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
-
-
     
 //Constantes para el control de la pantalla LCD
 
@@ -148,56 +131,32 @@ char tecla,input;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  hex1_valv_inh.attach(9);              //Señal de salida para activar valvula de entrada a intercambiador de calor de tubo doble
-  hex1_valv_outh.attach(10);              //Señal de salida para activar valvula de entrada a intercambiador de banco de tubos
-  hex1_valv_inc.attach(11);              //Señal de salida para activar valvula de entrada a intercambiador de tubo y aletas
-  hex1_valv_outc.attach(12);              //Señal de salida para activar valvula de salida a intercambiador de tubo doble
-  hex2_valv_inh.attach(13);              //Señal de salida para activar valvula de entrada a intercambiador de banco de tubos
-  hex2_valv_outh.attach(14);             //Señal de salida para activar valvula de entrada a intercambiador de tubo y aletas
-  hex2_valv_inc.attach(15);                 //Señal de salida para activar valvula de entrada flujo paralelo
-  hex2_valv_outc.attach(16);                 //Señal de salida para activar valvula de entrada contraflujo
-  hex1_valv1.attach(17);                //Señal de salida para activar valvula de salida flujo paralelo
-  hex1_valv2.attach(18);               //Señal de salida para activar valvula de salida contraflujo
-  hex1_valv3.attach(19);
-  hex1_valv4.attach(20);
-  hex3_valv_in.attach(21);
-  hex3_valv_out.attach(22);
+  int h1 = 0;h2 = 0;h3 = 0;
+  for(int i = 9; i <=22;i++){
+    if(i<=12 || (i>16 && i<=20)){
+      hex1_valv[h1].attach(i);
+      hex1_valv[h1].write(x);
+      h1++;
+    }
+    else if (i>12 && i<=16){
+      hex2_valv[h1].attach(i);
+      hex2_valv[h2].write(x);
+      h2++;
+    }
+    else if(i>20){
+      hex3_valv[h3].attach(i);
+      hex3_valv[h3].write(x);
+      h3++;
+    }
+  }
   
-  //Every valve to cero 
-
-  hex1_valv_inh.write(x);              //Señal de salida para activar valvula de entrada a intercambiador de calor de tubo doble
-  hex1_valv_outh.write(x);              //Señal de salida para activar valvula de entrada a intercambiador de banco de tubos
-  hex1_valv_inc.write(x);              //Señal de salida para activar valvula de entrada a intercambiador de tubo y aletas
-  hex1_valv_outc.write(x);              //Señal de salida para activar valvula de salida a intercambiador de tubo doble
-  hex2_valv_inh.write(x);              //Señal de salida para activar valvula de entrada a intercambiador de banco de tubos
-  hex2_valv_outh.write(x);             //Señal de salida para activar valvula de entrada a intercambiador de tubo y aletas
-  hex2_valv_inc.write(x);                 //Señal de salida para activar valvula de entrada flujo paralelo
-  hex2_valv_outc.write(x);                 //Señal de salida para activar valvula de entrada contraflujo
-  hex1_valv1.write(x);                //Señal de salida para activar valvula de salida flujo paralelo
-  hex1_valv2.write(x);               //Señal de salida para activar valvula de salida contraflujo
-  hex1_valv3.write(x);
-  hex1_valv4.write(x);
-  hex3_valv_in.write(x);
-  hex3_valv_out.write(x);
+  for(int i=0;i<anInt.length();i++){
+    pinMode(anInt[i],INPUT)
+  }
   
-  //
-  
-    pinMode(bomb_h,OUTPUT);                     //Señal de salida para activar la bomba de agua caliente
+  pinMode(bomb_h,OUTPUT);                     //Señal de salida para activar la bomba de agua caliente
   pinMode(bomb_c,OUTPUT);                     //Señal de salida para activar la bomba de agua fria
   pinMode(resistenceRel,OUTPUT);              //Señal de salida para activar el relevador de la resistecia
-  pinMode(A0,INPUT);                          //Señal de entrada para toma de datos de la temperatura del baño de agua caliente
-  pinMode(A1,INPUT);
-  pinMode(A2,INPUT);
-  pinMode(A3,INPUT);
-  pinMode(A4,INPUT);
-  pinMode(A5,INPUT);                          //Señales para entrada de toma de datos de los termopares de cada intercambiador
-  pinMode(A6,INPUT);
-  pinMode(A7,INPUT);
-  pinMode(A8,INPUT);
-  pinMode(A9,INPUT);
-  pinMode(A10,INPUT);
-  pinMode(A11,INPUT);
-  pinMode(A12,INPUT);
   Serial.println("CLEARDATA");
   Serial.println("LABEL,Time,temp_sensor_A,temp_sensor_B,temp_sensor_C,temp_sensor_D");
   //Set up the LCD's number of cols and rows
@@ -208,7 +167,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   //Press '*' to start the hole program
-   Serial.println("Bienvenido!");
+   /*Serial.println("Bienvenido!");
    Serial.println("Presione * para iniciar");
    lcd_print("Bienvenido","presione *");
    tecla=teclado.waitForKey();                                      //Revisa si la tecla '*' esta siendo presionada para iniciar el sistema
@@ -261,7 +220,7 @@ void loop() {
       hex_id=3;                                                            //hex_id indica el id del intercambiador de calor que se esta trabajando
       main_menu(state,"Tubo y aletas",0,0,0,0,1,1);
     }
-  }     
+  } */    
 }//void loop
 
 
